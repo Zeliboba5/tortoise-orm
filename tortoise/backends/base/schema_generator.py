@@ -178,10 +178,9 @@ class BaseSchemaGenerator:
             fields=", ".join([self.quote(f) for f in field_names]),
         )
 
-    def _get_table_sql(self,
-                       model: "Type[Model]",
-                       models_tables: "List[str]",
-                       safe: bool = True) -> dict:
+    def _get_table_sql(
+        self, model: "Type[Model]", models_tables: "List[str]", safe: bool = True
+    ) -> dict:
         fields_to_create = []
         fields_with_index = []
         m2m_tables_for_create = []
