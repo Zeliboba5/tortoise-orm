@@ -240,6 +240,12 @@ CREATE TABLE "event" (
     CONSTRAINT "uid_event_name_c6f89f" UNIQUE ("name", "prize"),
     CONSTRAINT "uid_event_tournam_a5b730" UNIQUE ("tournament_id", "key")
 ) /* This table contains a list of all the events */;
+CREATE TABLE "teamevents" (
+    "id" INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    "score" INT NOT NULL,
+    "event_id" BIGINT NOT NULL REFERENCES "event" ("id") ON DELETE CASCADE,
+    "team_id" VARCHAR(50) NOT NULL REFERENCES "team" ("name") ON DELETE CASCADE
+) /* How participants relate */;
 CREATE TABLE "venueinformation" (
     "id" INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
     "name" VARCHAR(128) NOT NULL,
@@ -255,10 +261,6 @@ CREATE TABLE "team_team" (
     "team_rel_id" VARCHAR(50) NOT NULL REFERENCES "team" ("name") ON DELETE CASCADE,
     "team_id" VARCHAR(50) NOT NULL REFERENCES "team" ("name") ON DELETE CASCADE
 );
-CREATE TABLE "teamevents" (
-    "event_id" BIGINT NOT NULL REFERENCES "event" ("id") ON DELETE CASCADE,
-    "team_id" VARCHAR(50) NOT NULL REFERENCES "team" ("name") ON DELETE CASCADE
-) /* How participants relate */;
 """.strip(),
         )
 
@@ -327,6 +329,12 @@ CREATE TABLE IF NOT EXISTS "event" (
     CONSTRAINT "uid_event_name_c6f89f" UNIQUE ("name", "prize"),
     CONSTRAINT "uid_event_tournam_a5b730" UNIQUE ("tournament_id", "key")
 ) /* This table contains a list of all the events */;
+CREATE TABLE IF NOT EXISTS "teamevents" (
+    "id" INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    "score" INT NOT NULL,
+    "event_id" BIGINT NOT NULL REFERENCES "event" ("id") ON DELETE CASCADE,
+    "team_id" VARCHAR(50) NOT NULL REFERENCES "team" ("name") ON DELETE CASCADE
+) /* How participants relate */;
 CREATE TABLE IF NOT EXISTS "venueinformation" (
     "id" INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
     "name" VARCHAR(128) NOT NULL,
@@ -342,10 +350,6 @@ CREATE TABLE IF NOT EXISTS "team_team" (
     "team_rel_id" VARCHAR(50) NOT NULL REFERENCES "team" ("name") ON DELETE CASCADE,
     "team_id" VARCHAR(50) NOT NULL REFERENCES "team" ("name") ON DELETE CASCADE
 );
-CREATE TABLE IF NOT EXISTS "teamevents" (
-    "event_id" BIGINT NOT NULL REFERENCES "event" ("id") ON DELETE CASCADE,
-    "team_id" VARCHAR(50) NOT NULL REFERENCES "team" ("name") ON DELETE CASCADE
-) /* How participants relate */;
 """.strip(),
         )
 
@@ -523,6 +527,14 @@ CREATE TABLE `event` (
     UNIQUE KEY `uid_event_tournam_a5b730` (`tournament_id`, `key`),
     CONSTRAINT `fk_event_tourname_51c2b82d` FOREIGN KEY (`tournament_id`) REFERENCES `tournament` (`tid`) ON DELETE CASCADE
 ) CHARACTER SET utf8mb4 COMMENT='This table contains a list of all the events';
+CREATE TABLE `teamevents` (
+    `id` INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
+    `score` INT NOT NULL,
+    `event_id` BIGINT NOT NULL,
+    `team_id` VARCHAR(50) NOT NULL,
+    CONSTRAINT `fk_teameven_event_9d3bac2d` FOREIGN KEY (`event_id`) REFERENCES `event` (`id`) ON DELETE CASCADE,
+    CONSTRAINT `fk_teameven_team_dc3bc201` FOREIGN KEY (`team_id`) REFERENCES `team` (`name`) ON DELETE CASCADE
+) CHARACTER SET utf8mb4 COMMENT='How participants relate';
 CREATE TABLE `venueinformation` (
     `id` INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
     `name` VARCHAR(128) NOT NULL,
@@ -543,12 +555,6 @@ CREATE TABLE `team_team` (
     FOREIGN KEY (`team_rel_id`) REFERENCES `team` (`name`) ON DELETE CASCADE,
     FOREIGN KEY (`team_id`) REFERENCES `team` (`name`) ON DELETE CASCADE
 ) CHARACTER SET utf8mb4;
-CREATE TABLE `teamevents` (
-    `event_id` BIGINT NOT NULL,
-    `team_id` VARCHAR(50) NOT NULL,
-    FOREIGN KEY (`event_id`) REFERENCES `event` (`id`) ON DELETE CASCADE,
-    FOREIGN KEY (`team_id`) REFERENCES `team` (`name`) ON DELETE CASCADE
-) CHARACTER SET utf8mb4 COMMENT='How participants relate';
 """.strip(),
         )
 
@@ -623,6 +629,14 @@ CREATE TABLE IF NOT EXISTS `event` (
     UNIQUE KEY `uid_event_tournam_a5b730` (`tournament_id`, `key`),
     CONSTRAINT `fk_event_tourname_51c2b82d` FOREIGN KEY (`tournament_id`) REFERENCES `tournament` (`tid`) ON DELETE CASCADE
 ) CHARACTER SET utf8mb4 COMMENT='This table contains a list of all the events';
+CREATE TABLE IF NOT EXISTS `teamevents` (
+    `id` INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
+    `score` INT NOT NULL,
+    `event_id` BIGINT NOT NULL,
+    `team_id` VARCHAR(50) NOT NULL,
+    CONSTRAINT `fk_teameven_event_9d3bac2d` FOREIGN KEY (`event_id`) REFERENCES `event` (`id`) ON DELETE CASCADE,
+    CONSTRAINT `fk_teameven_team_dc3bc201` FOREIGN KEY (`team_id`) REFERENCES `team` (`name`) ON DELETE CASCADE
+) CHARACTER SET utf8mb4 COMMENT='How participants relate';
 CREATE TABLE IF NOT EXISTS `venueinformation` (
     `id` INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
     `name` VARCHAR(128) NOT NULL,
@@ -643,12 +657,6 @@ CREATE TABLE IF NOT EXISTS `team_team` (
     FOREIGN KEY (`team_rel_id`) REFERENCES `team` (`name`) ON DELETE CASCADE,
     FOREIGN KEY (`team_id`) REFERENCES `team` (`name`) ON DELETE CASCADE
 ) CHARACTER SET utf8mb4;
-CREATE TABLE IF NOT EXISTS `teamevents` (
-    `event_id` BIGINT NOT NULL,
-    `team_id` VARCHAR(50) NOT NULL,
-    FOREIGN KEY (`event_id`) REFERENCES `event` (`id`) ON DELETE CASCADE,
-    FOREIGN KEY (`team_id`) REFERENCES `team` (`name`) ON DELETE CASCADE
-) CHARACTER SET utf8mb4 COMMENT='How participants relate';
 """.strip(),
         )
 
@@ -825,6 +833,13 @@ COMMENT ON COLUMN "event"."id" IS 'Event ID';
 COMMENT ON COLUMN "event"."token" IS 'Unique token';
 COMMENT ON COLUMN "event"."tournament_id" IS 'FK to tournament';
 COMMENT ON TABLE "event" IS 'This table contains a list of all the events';
+CREATE TABLE "teamevents" (
+    "id" SERIAL NOT NULL PRIMARY KEY,
+    "score" INT NOT NULL,
+    "event_id" BIGINT NOT NULL REFERENCES "event" ("id") ON DELETE CASCADE,
+    "team_id" VARCHAR(50) NOT NULL REFERENCES "team" ("name") ON DELETE CASCADE
+);
+COMMENT ON TABLE "teamevents" IS 'How participants relate';
 CREATE TABLE "venueinformation" (
     "id" SERIAL NOT NULL PRIMARY KEY,
     "name" VARCHAR(128) NOT NULL,
@@ -841,11 +856,6 @@ CREATE TABLE "team_team" (
     "team_rel_id" VARCHAR(50) NOT NULL REFERENCES "team" ("name") ON DELETE CASCADE,
     "team_id" VARCHAR(50) NOT NULL REFERENCES "team" ("name") ON DELETE CASCADE
 );
-CREATE TABLE "teamevents" (
-    "event_id" BIGINT NOT NULL REFERENCES "event" ("id") ON DELETE CASCADE,
-    "team_id" VARCHAR(50) NOT NULL REFERENCES "team" ("name") ON DELETE CASCADE
-);
-COMMENT ON TABLE "teamevents" IS 'How participants relate';
 """.strip(),
         )
 
@@ -927,6 +937,13 @@ COMMENT ON COLUMN "event"."id" IS 'Event ID';
 COMMENT ON COLUMN "event"."token" IS 'Unique token';
 COMMENT ON COLUMN "event"."tournament_id" IS 'FK to tournament';
 COMMENT ON TABLE "event" IS 'This table contains a list of all the events';
+CREATE TABLE IF NOT EXISTS "teamevents" (
+    "id" SERIAL NOT NULL PRIMARY KEY,
+    "score" INT NOT NULL,
+    "event_id" BIGINT NOT NULL REFERENCES "event" ("id") ON DELETE CASCADE,
+    "team_id" VARCHAR(50) NOT NULL REFERENCES "team" ("name") ON DELETE CASCADE
+);
+COMMENT ON TABLE "teamevents" IS 'How participants relate';
 CREATE TABLE IF NOT EXISTS "venueinformation" (
     "id" SERIAL NOT NULL PRIMARY KEY,
     "name" VARCHAR(128) NOT NULL,
@@ -943,10 +960,5 @@ CREATE TABLE IF NOT EXISTS "team_team" (
     "team_rel_id" VARCHAR(50) NOT NULL REFERENCES "team" ("name") ON DELETE CASCADE,
     "team_id" VARCHAR(50) NOT NULL REFERENCES "team" ("name") ON DELETE CASCADE
 );
-CREATE TABLE IF NOT EXISTS "teamevents" (
-    "event_id" BIGINT NOT NULL REFERENCES "event" ("id") ON DELETE CASCADE,
-    "team_id" VARCHAR(50) NOT NULL REFERENCES "team" ("name") ON DELETE CASCADE
-);
-COMMENT ON TABLE "teamevents" IS 'How participants relate';
 """.strip(),
         )

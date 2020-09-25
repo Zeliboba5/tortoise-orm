@@ -38,6 +38,16 @@ class Event(Model):
         unique_together = [("name", "prize"), ["tournament", "key"]]
 
 
+class TeamEvent(Model):
+    score = fields.IntField()
+    event = fields.ForeignKeyField("models.Event", related_name="events")
+    team = fields.ForeignKeyField("models.Team", related_name="teams")
+
+    class Meta:
+        table = "teamevents"
+        table_description = "How participants relate"
+
+
 class Team(Model):
     name = fields.CharField(max_length=50, pk=True, description="The TEAM name (and PK)")
     key = fields.IntField()
