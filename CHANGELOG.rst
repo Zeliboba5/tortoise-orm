@@ -14,6 +14,7 @@ Changelog
 - Fix duplicates when using custom through association class on M2M relations
 - Fix `update_or_create` and `get_or_create`. (#721)
 - Fix `refresh_from_db` without fields pass. (#734)
+- Add `contains`, `contained_by` and `filter` to `JSONField`
 
 0.17.2
 ------
