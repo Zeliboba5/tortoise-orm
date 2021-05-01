@@ -65,6 +65,110 @@ class TestJSONFields(test.TestCase):
         obj2 = await testmodels.JSONFields.get(id=obj.id)
         self.assertEqual(obj, obj2)
 
+    async def test_list_contains(self):
+        await testmodels.JSONFields.create(data=["text", 3, {"msg": "msg2"}])
+        obj = await testmodels.JSONFields.filter(data__contains=[{"msg": "msg2"}]).first()
+        self.assertEqual(obj.data, ["text", 3, {"msg": "msg2"}])
+        await obj.save()
+        obj2 = await testmodels.JSONFields.get(id=obj.id)
+        self.assertEqual(obj, obj2)
+
+    async def test_list_contained_by(self):
+        obj0 = await testmodels.JSONFields.create(data=["text"])
+        obj1 = await testmodels.JSONFields.create(data=["tortoise", "msg"])
+        obj2 = await testmodels.JSONFields.create(data=["tortoise"])
+        objs = set(
+            await testmodels.JSONFields.filter(data__contained_by=["text", "tortoise", "msg"])
+        )
+        created_objs = {obj0, obj1, obj2}
+        self.assertSetEqual(created_objs, objs)
+
+    async def test_filter(self):
+        obj0 = await testmodels.JSONFields.create(
+            data={
+                "breed": "labrador",
+                "owner": {
+                    "name": "Bob",
+                    "last": None,
+                    "other_pets": [
+                        {
+                            "name": "Fishy",
+                        }
+                    ],
+                },
+            }
+        )
+        obj = await testmodels.JSONFields.filter(data__filter={"breed": "labrador"}).first()
+        self.assertEqual(obj0, obj)
+        obj2 = await testmodels.JSONFields.filter(data__filter={"owner__name": "Bob"}).first()
+        self.assertEqual(obj0, obj2)
+        obj3 = await testmodels.JSONFields.filter(
+            data__filter={"owner__other_pets__0__name": "Fishy"}
+        ).first()
+        self.assertEqual(obj0, obj3)
+
+    async def test_filter_not_condition(self):
+        obj0 = await testmodels.JSONFields.create(
+            data={
+                "breed": "labrador",
+                "owner": {
+                    "name": "Bob",
+                    "last": None,
+                    "other_pets": [
+                        {
+                            "name": "Fishy",
+                        }
+                    ],
+                },
+            }
+        )
+
+        obj1 = await testmodels.JSONFields.filter(data__filter={"breed__not": "a"}).first()
+        self.assertEqual(obj0, obj1)
+
+    async def test_filter_is_null_condition(self):
+        obj0 = await testmodels.JSONFields.create(
+            data={
+                "breed": "labrador",
+                "owner": {
+                    "name": None,
+                    "last": "Cloud",
+                    "other_pets": [
+                        {
+                            "name": "Fishy",
+                        }
+                    ],
+                },
+            }
+        )
+
+        obj1 = await testmodels.JSONFields.filter(
+            data__filter={"owner__name__isnull": True}
+        ).first()
+
+        self.assertEqual(obj0, obj1)
+
+    async def test_filter_not_is_null_condition(self):
+        obj0 = await testmodels.JSONFields.create(
+            data={
+                "breed": "labrador",
+                "owner": {
+                    "name": "Boby",
+                    "last": None,
+                    "other_pets": [
+                        {
+                            "name": "Fishy",
+                        }
+                    ],
+                },
+            }
+        )
+
+        obj1 = await testmodels.JSONFields.filter(
+            data__filter={"owner__last__not_isnull": False}
+        ).first()
+        self.assertEqual(obj0, obj1)
+
     async def test_values(self):
         obj0 = await testmodels.JSONFields.create(data={"some": ["text", 3]})
         values = await testmodels.JSONFields.filter(id=obj0.id).values("data")
