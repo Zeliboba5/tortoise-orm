@@ -8,7 +8,7 @@ from contextvars import ContextVar
 from copy import deepcopy
 from inspect import isclass
 from types import ModuleType
-from typing import Coroutine, Dict, Iterable, List, Optional, Tuple, Type, Union, cast
+from typing import Coroutine, Dict, Iterable, List, Optional, Set, Tuple, Type, Union, cast
 
 from pypika import Table
 
@@ -397,7 +397,7 @@ class Tortoise:
         models_paths: Iterable[Union[ModuleType, str]],
         app_label: str,
         _init_relations: bool = True,
-    ) -> None:
+    ) -> Set[str]:
         """
         Early initialisation of Tortoise ORM Models.
 
@@ -414,24 +414,45 @@ class Tortoise:
         for models_path in models_paths:
             app_models += cls._discover_models(models_path, app_label)
 
+        model_name_set = set()
+        for model in app_models:
+            if model.__name__ in model_name_set:
+                raise ConfigurationError(
+                    f"The model of the {model.__name__} cannot be created twice."
+                )
+            model_name_set.add(model.__name__)
+
         cls.apps[app_label] = {model.__name__: model for model in app_models}
 
         if _init_relations:
             cls._init_relations()
 
+        return model_name_set
+
     @classmethod
     def _init_apps(cls, apps_config: dict) -> None:
+        app_model_name_dict: Dict[str, Set[str]] = {}
         for name, info in apps_config.items():
+            db_name = info.get("default_connection", "default")
             try:
-                cls.get_connection(info.get("default_connection", "default"))
+                cls.get_connection(db_name)
             except KeyError:
                 raise ConfigurationError(
                     'Unknown connection "{}" for app "{}"'.format(
                         info.get("default_connection", "default"), name
                     )
                 )
-
-            cls.init_models(info["models"], name, _init_relations=False)
+            model_name_set = cls.init_models(info["models"], name, _init_relations=False)
+            if app_model_name_dict.get(db_name):
+                for model_name in model_name_set:
+                    if model_name in app_model_name_dict.get(db_name):  # type: ignore
+                        raise ConfigurationError(
+                            f"The model of the {model_name} cannot be created twice."
+                        )
+                else:
+                    app_model_name_dict[db_name] = app_model_name_dict[db_name] | model_name_set
+            else:
+                app_model_name_dict[db_name] = model_name_set
 
             for model in cls.apps[name].values():
                 model._meta.default_connection = info.get("default_connection", "default")
