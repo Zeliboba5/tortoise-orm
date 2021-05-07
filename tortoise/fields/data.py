@@ -14,7 +14,7 @@ from pypika.terms import Term
 from tortoise import timezone
 from tortoise.exceptions import ConfigurationError, FieldError
 from tortoise.fields.base import Field
-from tortoise.timezone import get_timezone, get_use_tz, localtime
+from tortoise.timezone import get_timezone, get_use_tz
 from tortoise.validators import MaxLengthValidator
 
 try:
@@ -284,9 +284,9 @@ class DatetimeField(Field, datetime.datetime):
     You can opt to set neither or only ONE of them.
 
     ``auto_now`` (bool):
-        Always set to ``datetime.utcnow()`` on save.
+        Always set to ``tortoise.timezone.now()`` on save.
     ``auto_now_add`` (bool):
-        Set to ``datetime.utcnow()`` on first save only.
+        Set to ``tortoise.timezone.now()`` on first save only.
     """
 
     SQL_TYPE = "TIMESTAMP"
@@ -295,7 +295,7 @@ class DatetimeField(Field, datetime.datetime):
         SQL_TYPE = "DATETIME(6)"
 
     class _db_postgres:
-        SQL_TYPE = "TIMESTAMPTZ"
+        SQL_TYPE = "TIMESTAMPTZ" if get_use_tz() else "TIMESTAMP"
 
     def __init__(self, auto_now: bool = False, auto_now_add: bool = False, **kwargs: Any) -> None:
         if auto_now_add and auto_now:
@@ -314,10 +314,8 @@ class DatetimeField(Field, datetime.datetime):
                 value = datetime.datetime.fromtimestamp(value)
             else:
                 value = parse_datetime(value)
-            if timezone.is_naive(value):
+            if get_use_tz():
                 value = timezone.make_aware(value, get_timezone())
-            else:
-                value = localtime(value)
         self.validate(value)
         return value
 
